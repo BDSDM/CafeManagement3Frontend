@@ -35,6 +35,12 @@ import { UpdateComponent } from './update/update.component';
 import { AdminRequiredComponent } from './admin-required/admin-required.component';
 import { RequestResetPasswordComponent } from './request-reset-password/request-reset-password.component';
 import { ConfirmResetPasswordComponent } from './confirm-reset-password/confirm-reset-password.component';
+import { CookiesgameComponent } from './cookiesgame/cookiesgame.component';
+import { TodoListComponent } from './todo-list/todo-list.component';
+import { ProductManagementComponent } from './product-management/product-management.component';
+import { UpdateProductComponent } from './update-product/update-product.component';
+import { CreateProductComponent } from './create-product/create-product.component';
+import { BuyProductComponent } from './buy-product/buy-product.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -46,12 +52,18 @@ import { ConfirmResetPasswordComponent } from './confirm-reset-password/confirm-
     ConfirmLogoutDialogComponent,
 
     RefreshTokenPopupComponent,
-     UsermanagementComponent,
-     ConfirmDeleteComponent,
-     UpdateComponent,
-     AdminRequiredComponent,
-     RequestResetPasswordComponent,
-     ConfirmResetPasswordComponent,
+    UsermanagementComponent,
+    ConfirmDeleteComponent,
+    UpdateComponent,
+    AdminRequiredComponent,
+    RequestResetPasswordComponent,
+    ConfirmResetPasswordComponent,
+    CookiesgameComponent,
+    TodoListComponent,
+    ProductManagementComponent,
+    UpdateProductComponent,
+    CreateProductComponent,
+    BuyProductComponent,
   ],
   imports: [
     BrowserModule,

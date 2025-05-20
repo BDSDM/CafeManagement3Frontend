@@ -1,26 +1,34 @@
-import { Component, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
+import { MatTableDataSource } from '@angular/material/table';
+import { User, UserService } from '../services/user.service';
+import { MatPaginator } from '@angular/material/paginator';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { User } from '../models/user.model';
-import { MatTableDataSource } from '@angular/material/table';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
-import { UserService } from '../services/user.service';
-import { UpdateComponent } from '../update/update.component';
+import { UpdateProductComponent } from '../update-product/update-product.component';
 import { ConfirmDeleteComponent } from '../confirm-delete/confirm-delete.component';
-import { MatPaginator } from '@angular/material/paginator'; // Import de MatPaginator
+import { Product, ProductService } from '../services/product.service';
+import { CreateProductComponent } from '../create-product/create-product.component';
+import { catchError, forkJoin, of, tap } from 'rxjs';
 
 @Component({
-  selector: 'app-usermanagement',
-  templateUrl: './usermanagement.component.html',
-  styleUrls: ['./usermanagement.component.css'],
+  selector: 'app-product-management',
+  templateUrl: './product-management.component.html',
+  styleUrls: ['./product-management.component.css'],
 })
-export class UsermanagementComponent implements AfterViewInit {
+export class ProductManagementComponent {
   // Implémentation de AfterViewInit
   username: string = '';
-  dataSource: MatTableDataSource<User> = new MatTableDataSource<User>();
-  displayedColumns: string[] = ['name', 'actions', 'update', 'status'];
+  dataSource: MatTableDataSource<Product> = new MatTableDataSource<Product>();
+  displayedColumns: string[] = [
+    'name',
+    'price',
+    'userName',
+    'update',
+    'actions',
+  ];
 
-  users: User[] = [];
+  products: Product[] = [];
   filterValue: string = '';
 
   // Déclaration de @ViewChild pour récupérer l'élément MatPaginator
@@ -30,6 +38,7 @@ export class UsermanagementComponent implements AfterViewInit {
     private router: Router,
     private authService: AuthService,
     private dialog: MatDialog,
+    private productService: ProductService,
     private userService: UserService
   ) {}
 
@@ -46,19 +55,26 @@ export class UsermanagementComponent implements AfterViewInit {
     console.log('Page changed:', event);
     // Vous pouvez mettre à jour ici vos données ou effectuer des actions supplémentaires
   }
+  handleCreateProductAction() {
+    const dialogConfig = new MatDialogConfig();
+    dialogConfig.width = '550px';
+    dialogConfig.disableClose = true; // Empêche la fermeture en cliquant à l'extérieur
+    this.dialog.open(CreateProductComponent, dialogConfig);
+  }
 
   // Fonction pour récupérer les données des utilisateurs depuis le service
   tableData(): void {
-    this.userService.getAllUsers().subscribe((response: User[]) => {
-      this.users = response;
-      this.dataSource.data = this.users; // Affecter les données à la source de données
+    this.productService.getAll().subscribe((response: Product[]) => {
+      this.products = response;
+      console.log('produiiiiiiiiiiiiiiiiiiiii  ' + response);
+      this.dataSource.data = this.products; // Affecter les données à la source de données
       // Assigner le paginator à la dataSource ici si nécessaire
     });
   }
 
   // Fonction de mise à jour d'un utilisateur
-  handleUpdateAction(user: User): void {
-    if (user.id === undefined) {
+  handleUpdateAction(product: Product): void {
+    if (product.id === undefined) {
       console.error('User ID is undefined. Cannot update.');
       return;
     }
@@ -66,19 +82,21 @@ export class UsermanagementComponent implements AfterViewInit {
     const dialogConfig = new MatDialogConfig();
     dialogConfig.width = '550px';
     dialogConfig.disableClose = true;
-    dialogConfig.data = { user };
+    dialogConfig.data = { product };
 
-    const dialogRef = this.dialog.open(UpdateComponent, dialogConfig);
+    const dialogRef = this.dialog.open(UpdateProductComponent, dialogConfig);
 
-    dialogRef.afterClosed().subscribe((updatedData: User) => {
+    dialogRef.afterClosed().subscribe((updatedData: Product) => {
       if (updatedData) {
-        this.userService
-          .updateUser(user.id as number, updatedData)
+        this.productService
+          .update(product.id as number, updatedData)
           .subscribe((updatedUser) => {
-            const index = this.users.findIndex((u) => u.id === updatedUser.id);
+            const index = this.products.findIndex(
+              (u) => u.id === updatedUser.id
+            );
             if (index !== -1) {
-              this.users[index] = updatedUser;
-              this.dataSource.data = [...this.users];
+              this.products[index] = updatedUser;
+              this.dataSource.data = [...this.products];
             }
           });
       }
@@ -94,10 +112,12 @@ export class UsermanagementComponent implements AfterViewInit {
 
     dialogRef.afterClosed().subscribe((confirm: boolean) => {
       if (confirm) {
-        this.userService.deleteUser(id).subscribe(
+        this.productService.delete(id).subscribe(
           () => {
-            this.users = this.users.filter((user) => user.id !== id);
-            this.dataSource.data = [...this.users];
+            this.products = this.products.filter(
+              (product) => product.id !== id
+            );
+            this.dataSource.data = [...this.products];
             console.log('Utilisateur supprimé avec succès.');
           },
           (error) => {
@@ -118,7 +138,7 @@ export class UsermanagementComponent implements AfterViewInit {
   }
 
   goToProfile() {}
-  goToSettings() {}
+
   // Fonction pour la gestion de la navigation
   goToUsersManagement() {
     this.router.navigate(['/usermanagement']);
@@ -135,9 +155,6 @@ export class UsermanagementComponent implements AfterViewInit {
   goToCookiesGame() {
     this.router.navigate(['/cookiesgame']);
   }
-  goToProductsManagement() {
-    this.router.navigate(['/productmanagement']);
-  }
   goToBuyProduct() {
     this.router.navigate(['/buyproduct']);
   }
@@ -148,7 +165,7 @@ export class UsermanagementComponent implements AfterViewInit {
 
   // Fonction pour changer le statut d'un utilisateur
   toggleStatus(user: User): void {
-    if (user.email === undefined) {
+    /* if (user.email === undefined) {
       console.error('User ID is undefined. Cannot toggle status.');
       return;
     }
@@ -162,6 +179,6 @@ export class UsermanagementComponent implements AfterViewInit {
       error: (err) => {
         console.error('Erreur lors de la mise à jour du statut', err);
       },
-    });
+    }); */
   }
 }

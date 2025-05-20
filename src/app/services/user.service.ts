@@ -127,9 +127,7 @@ export class UserService {
   }
   logoutFromApp() {
     this.dialog.closeAll();
-
     localStorage.removeItem('token');
-
     this.router.navigate(['/home']);
   }
 }
